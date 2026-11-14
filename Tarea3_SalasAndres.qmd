@@ -1,0 +1,149 @@
+---
+title: "Tarea3"
+format:
+  html:
+    code-fold: false
+    code-tools: false
+execute:
+  echo: false
+editor: visual
+---
+
+```{r}
+#| include: false
+# Generar y preparar los datos
+source("cod/01_datos.R")
+
+# Cargar las funciones
+source("cod/funciones_tarea3.R")
+
+# Cargar librerias necesarias
+library(ggplot2)
+
+parametros <- read.csv2("config/parametros_tarea3.csv")
+
+# Leer las transacciones
+transacciones <- read.csv2(
+  "data/transacciones_2025.csv"
+)
+
+# Convertir fecha a formato Date
+transacciones$fecha <- as.Date(
+  transacciones$fecha
+)
+
+# Obtener los parámetros
+ventana <- as.numeric(
+  parametros$valor[parametros$parametro == "ventana"]
+)
+
+k.alerta <- as.numeric(
+  parametros$valor[parametros$parametro == "k.alerta"]
+)
+
+# Calcular las alertas móviles
+resultado.alertas <- alerta.movil(
+  df = transacciones,
+  ventana = ventana,
+  k.alerta = k.alerta
+)
+```
+
+```{r}
+#| include: false
+# Resultado 1A: cantidad de días con alerta
+resultado_1A <- sum(
+  resultado.alertas$alerta,
+  na.rm = TRUE
+)
+
+# Resultado 1B: Fecha de la primera alerta
+resultado_1B <- resultado.alertas$fecha[
+  which(resultado.alertas$alerta %in% TRUE)[1]
+]
+
+# Resultado 1C: alertas con parámetros comunes
+resultado.comun <- alerta.movil(
+  df = transacciones,
+  ventana = 7,
+  k.alerta = 2
+)
+
+resultado_1C <- sum(
+  resultado.comun$alerta,
+  na.rm = TRUE
+)
+
+# Mostrar resultados
+resultado_1A
+resultado_1B
+resultado_1C
+
+```
+
+```{r}
+#| include: false
+# Grafico ejercicio 1
+# Calcular el límite superior para las alertas
+resultado.alertas$limite <- resultado.alertas$media +
+  k.alerta * resultado.alertas$desv
+
+# Crear el gráfico
+grafico.alertas <- ggplot(
+  resultado.alertas,
+  aes(x = fecha, y = n.tx)
+) +
+  geom_line(color = "#547C91", linewidth = 0.7) +
+  geom_line(
+    aes(y = limite),
+    color = "#D69A45",
+    linetype = "dashed",
+    linewidth = 0.8,
+    na.rm = TRUE
+  ) +
+  geom_point(
+    data = subset(resultado.alertas, alerta %in% TRUE),
+    color = "#B74747",
+    size = 2
+  ) +
+  labs(
+    title = "Detección de alertas en las transacciones diarias",
+    subtitle = "Los puntos rojos representan los días con alerta",
+    x = "Fecha",
+    y = "Cantidad de transacciones",
+    caption = "Línea discontinua: límite superior de alerta"
+  ) +
+  theme_minimal()
+
+# Crear la carpeta si no existe
+if (!dir.exists("info/figuras")) {
+  dir.create("info/figuras", recursive = TRUE)
+}
+
+# Guardar el gráfico
+ggsave(
+  filename = "info/figuras/alertas_moviles.png",
+  plot = grafico.alertas,
+  width = 12,
+  height = 6,
+  dpi = 300
+)
+```
+
+```{r}
+# Imprimir las respuestas
+cat(
+  "RESULTADO_1A = ", resultado_1A, "\n",
+  "RESULTADO_1B = ", format(resultado_1B, "%Y-%m-%d"), "\n",
+  "RESULTADO_1C = ", resultado_1C, "\n",
+  # "RESULTADO_2A = ", resultado_2A, "\n",
+  # "RESULTADO_2B = ", resultado_2B, "\n",
+  # "RESULTADO_2C = ", resultado_2C, "\n",
+  # "RESULTADO_2D = ", resultado_2D, "\n",
+  # "RESULTADO_3A = ", sprintf("%.2f", resultado_3A), "\n",
+  # "RESULTADO_3B = ", sprintf("%.2f", resultado_3B), "\n",
+  # "RESULTADO_3C = ", sprintf("%.2f", resultado_3C), "\n",
+  sep = ""
+)
+```
+
