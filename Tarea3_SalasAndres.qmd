@@ -324,4 +324,7 @@ cat(
 )
 ```
 
+## Repositorio de GitHub
 
+El código fuente, los datos, las funciones y los archivos del proyecto se encuentran disponibles en:
+https://github.com/AndresSalas04/Tarea3_SalasAndres.git
