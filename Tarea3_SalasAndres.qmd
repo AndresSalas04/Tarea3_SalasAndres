@@ -179,6 +179,48 @@ resultado.web <- benford.canton(
 resultado_2D <- resultado.web$canton[1]
 ```
 
+```{r}
+#| include: false
+
+# Crear carpeta de imagenes si no existe
+dir.create("info", showWarnings = FALSE)
+
+# Seleccionar los diez cantones con mayor MAD
+datos.grafico.2 <- head(resultado.benford, 10)
+
+# Crear grafica
+grafico.2 <- ggplot2::ggplot(
+  datos.grafico.2,
+  ggplot2::aes(
+    x = reorder(canton, MAD),
+    y = MAD
+  )
+) +
+  ggplot2::geom_col(fill = "#A64B43") +
+  ggplot2::geom_hline(
+    yintercept = 0.015,
+    linetype = "dashed",
+    color = "black"
+  ) +
+  ggplot2::coord_flip() +
+  ggplot2::labs(
+    title = "Cantones con mayor desviacion de Benford",
+    subtitle = "Canal Cajero - Diez valores mas altos",
+    x = "Canton",
+    y = "MAD"
+  ) +
+  ggplot2::theme_minimal()
+
+# Guardar grafica como imagen
+ggplot2::ggsave(
+  "info/grafico_benford_cantones.png",
+  plot = grafico.2,
+  width = 10,
+  height = 7,
+  dpi = 300
+)
+```
+
 
 ```{r}
 # Imprimir las respuestas
